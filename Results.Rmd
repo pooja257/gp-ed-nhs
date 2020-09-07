@@ -1,0 +1,523 @@
+---
+title: "Results"
+author: "Pooja Chaturvedi"
+date: "03/05/2020"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(ggpubr)
+
+```
+
+Read the master data from the file and replace rurality fraction of year 2016(previously 0.5) with year 2017. 
+
+```{r}
+master_data <- read.csv("master_data.csv", row.names = 1)
+stp2016 <- unique(master_data[master_data$Year==2016,"STP_code"])
+for (stp in stp2016){
+  master_data[(master_data$Year==2016)&(master_data$STP_code==stp),"Rurality_Fraction"] <- master_data[(master_data$Year==2017)&(master_data$STP_code==stp),"Rurality_Fraction"]
+}
+master_data["Rurality_Percentage"] = 100* master_data["Rurality_Fraction"]
+master_data["Seniority_Percentage"] = 100* master_data["Total_Seniors_STP"] / master_data["Total_Patients"]
+master_data["Extended_Hour_Per_1000_Patient"] = 1000* master_data["Total_Extended_Hours"] / master_data["Total_Patients"]
+master_data["TotalEDAttendance_Per_1000_Patient"] = 1000* master_data["TotalAEAttendance"] / master_data["Total_Patients"]
+colnames(master_data) <- c("STP_code", "Year", "Total_Patients", "Total_Extended_Hours", "Rurality_Fraction", "Total_Seniors_STP", "Type1EDAttendances", "Type2EDAttendances", "OtherEDAttendances", "TotalEDAttendance", "Rurality_Percentage", "Seniority_Percentage", "Extended_Hour_Per_1000_Patient", "TotalEDAttendance_Per_1000_Patient")
+```
+
+```{r}
+head(master_data)
+```
+
+
+## Find outliers
+
+```{r}
+high_extended_hour_2016 <- mean(master_data[master_data$Year==2016,]$Extended_Hour_Per_1000_Patient)+3*sd(master_data[master_data$Year==2016,]$Extended_Hour_Per_1000_Patient)
+
+low_extended_hour_2016 <- mean(master_data[master_data$Year==2016,]$Extended_Hour_Per_1000_Patient)-3*sd(master_data[master_data$Year==2016,]$Extended_Hour_Per_1000_Patient)
+outlier_extended_hour_2016 <- ((master_data[master_data$Year==2016,]$Extended_Hour_Per_1000_Patient > high_extended_hour_2016) | (master_data[master_data$Year==2016,]$Extended_Hour_Per_1000_Patient < low_extended_hour_2016))
+
+high_extended_hour_2017 <- mean(master_data[master_data$Year==2017,]$Extended_Hour_Per_1000_Patient)+3*sd(master_data[master_data$Year==2017,]$Extended_Hour_Per_1000_Patient)
+low_extended_hour_2017 <- mean(master_data[master_data$Year==2017,]$Extended_Hour_Per_1000_Patient)-3*sd(master_data[master_data$Year==2017,]$Extended_Hour_Per_1000_Patient)
+outlier_extended_hour_2017 <- ((master_data[master_data$Year==2017,]$Extended_Hour_Per_1000_Patient > high_extended_hour_2017) | (master_data[master_data$Year==2017,]$Extended_Hour_Per_1000_Patient < low_extended_hour_2017))
+
+high_extended_hour_2018 <- mean(master_data[master_data$Year==2018,]$Extended_Hour_Per_1000_Patient)+3*sd(master_data[master_data$Year==2018,]$Extended_Hour_Per_1000_Patient)
+low_extended_hour_2018 <- mean(master_data[master_data$Year==2018,]$Extended_Hour_Per_1000_Patient)-3*sd(master_data[master_data$Year==2018,]$Extended_Hour_Per_1000_Patient)
+outlier_extended_hour_2018 <- ((master_data[master_data$Year==2018,]$Extended_Hour_Per_1000_Patient > high_extended_hour_2018) | (master_data[master_data$Year==2018,]$Extended_Hour_Per_1000_Patient < low_extended_hour_2018))
+
+high_extended_hour_2019 <- mean(master_data[master_data$Year==2019,]$Extended_Hour_Per_1000_Patient)+3*sd(master_data[master_data$Year==2019,]$Extended_Hour_Per_1000_Patient)
+low_extended_hour_2019 <- mean(master_data[master_data$Year==2019,]$Extended_Hour_Per_1000_Patient)-3*sd(master_data[master_data$Year==2019,]$Extended_Hour_Per_1000_Patient)
+outlier_extended_hour_2019 <- ((master_data[master_data$Year==2019,]$Extended_Hour_Per_1000_Patient > high_extended_hour_2019) | (master_data[master_data$Year==2019,]$Extended_Hour_Per_1000_Patient < low_extended_hour_2019))
+
+```
+
+
+```{r}
+high_rurality_2016 <- mean(master_data[master_data$Year==2016,]$Rurality_Percentage)+3*sd(master_data[master_data$Year==2016,]$Rurality_Percentage)
+low_rurality_2016 <- mean(master_data[master_data$Year==2016,]$Rurality_Percentage)-3*sd(master_data[master_data$Year==2016,]$Rurality_Percentage)
+outlier_rurality_2016 <- ((master_data[master_data$Year==2016,]$Rurality_Percentage > high_rurality_2016) | (master_data[master_data$Year==2016,]$Rurality_Percentage < low_rurality_2016))
+
+
+high_rurality_2017 <- mean(master_data[master_data$Year==2017,]$Rurality_Percentage)+3*sd(master_data[master_data$Year==2017,]$Rurality_Percentage)
+low_rurality_2017 <- mean(master_data[master_data$Year==2017,]$Rurality_Percentage)-3*sd(master_data[master_data$Year==2017,]$Rurality_Percentage)
+outlier_rurality_2017 <- ((master_data[master_data$Year==2017,]$Rurality_Percentage > high_rurality_2017) | (master_data[master_data$Year==2017,]$Rurality_Percentage < low_rurality_2017))
+
+
+high_rurality_2018 <- mean(master_data[master_data$Year==2018,]$Rurality_Percentage)+3*sd(master_data[master_data$Year==2018,]$Rurality_Percentage)
+low_rurality_2018 <- mean(master_data[master_data$Year==2018,]$Rurality_Percentage)-3*sd(master_data[master_data$Year==2018,]$Rurality_Percentage)
+outlier_rurality_2018 <- ((master_data[master_data$Year==2018,]$Rurality_Percentage > high_rurality_2018) | (master_data[master_data$Year==2018,]$Rurality_Percentage < low_rurality_2018))
+
+
+high_rurality_2019 <- mean(master_data[master_data$Year==2019,]$Rurality_Percentage)+3*sd(master_data[master_data$Year==2019,]$Rurality_Percentage)
+low_rurality_2019 <- mean(master_data[master_data$Year==2019,]$Rurality_Percentage)-3*sd(master_data[master_data$Year==2019,]$Rurality_Percentage)
+outlier_rurality_2019 <- ((master_data[master_data$Year==2019,]$Rurality_Percentage > high_rurality_2019) | (master_data[master_data$Year==2019,]$Rurality_Percentage < low_rurality_2019))
+
+```
+
+```{r}
+high_seniority_2016 <- mean(master_data[master_data$Year==2016,]$Seniority_Percentage)+3*sd(master_data[master_data$Year==2016,]$Seniority_Percentage)
+low_seniority_2016 <- mean(master_data[master_data$Year==2016,]$Seniority_Percentage)-3*sd(master_data[master_data$Year==2016,]$Seniority_Percentage)
+outlier_seniory_2016 <- ((master_data[master_data$Year==2016,]$Seniority_Percentage > high_seniority_2016) | (master_data[master_data$Year==2016,]$Seniority_Percentage < low_seniority_2016))
+
+
+high_seniority_2017 = mean(master_data[master_data$Year==2017,]$Seniority_Percentage)+3*sd(master_data[master_data$Year==2017,]$Seniority_Percentage)
+low_seniority_2017 = mean(master_data[master_data$Year==2017,]$Seniority_Percentage)-3*sd(master_data[master_data$Year==2017,]$Seniority_Percentage)
+outlier_seniory_2017 <- ((master_data[master_data$Year==2017,]$Seniority_Percentage > high_seniority_2017) | (master_data[master_data$Year==2017,]$Seniority_Percentage < low_seniority_2017))
+
+
+high_seniority_2018 <- mean(master_data[master_data$Year==2018,]$Seniority_Percentage)+3*sd(master_data[master_data$Year==2018,]$Seniority_Percentage)
+low_seniority_2018 <- mean(master_data[master_data$Year==2018,]$Seniority_Percentage)-3*sd(master_data[master_data$Year==2018,]$Seniority_Percentage)
+outlier_seniory_2018 <- ((master_data[master_data$Year==2018,]$Seniority_Percentage > high_seniority_2018) | (master_data[master_data$Year==2018,]$Seniority_Percentage < low_seniority_2018))
+
+
+high_seniority_2019 <- mean(master_data[master_data$Year==2019,]$Seniority_Percentage)+3*sd(master_data[master_data$Year==2019,]$Seniority_Percentage)
+low_seniority_2019 <- mean(master_data[master_data$Year==2019,]$Seniority_Percentage)-3*sd(master_data[master_data$Year==2019,]$Seniority_Percentage)
+outlier_seniory_2019 <- ((master_data[master_data$Year==2019,]$Seniority_Percentage > high_seniority_2019) | (master_data[master_data$Year==2019,]$Seniority_Percentage < low_seniority_2019))
+
+```
+
+```{r}
+high_ed_total_2016 <- mean(master_data[master_data$Year==2016,]$TotalEDAttendance_Per_1000_Patient)+3*sd(master_data[master_data$Year==2016,]$TotalEDAttendance_Per_1000_Patient)
+low_ed_total_2016 <- mean(master_data[master_data$Year==2016,]$TotalEDAttendance_Per_1000_Patient)-3*sd(master_data[master_data$Year==2016,]$TotalEDAttendance_Per_1000_Patient)
+outlier_ed_total_2016 <- ((master_data[master_data$Year==2016,]$TotalEDAttendance_Per_1000_Patient > high_ed_total_2016) | (master_data[master_data$Year==2016,]$TotalEDAttendance_Per_1000_Patient < low_ed_total_2016))
+
+
+high_ed_total_2017 <- mean(master_data[master_data$Year==2017,]$TotalEDAttendance_Per_1000_Patient)+3*sd(master_data[master_data$Year==2017,]$TotalEDAttendance_Per_1000_Patient)
+low_ed_total_2017 <- mean(master_data[master_data$Year==2017,]$TotalEDAttendance_Per_1000_Patient)-3*sd(master_data[master_data$Year==2017,]$TotalEDAttendance_Per_1000_Patient)
+outlier_ed_total_2017 <- ((master_data[master_data$Year==2017,]$TotalEDAttendance_Per_1000_Patient > high_ed_total_2017) | (master_data[master_data$Year==2017,]$TotalEDAttendance_Per_1000_Patient < low_ed_total_2017))
+
+
+high_ed_total_2018 <- mean(master_data[master_data$Year==2018,]$TotalEDAttendance_Per_1000_Patient)+3*sd(master_data[master_data$Year==2018,]$TotalEDAttendance_Per_1000_Patient)
+low_ed_total_2018 <- mean(master_data[master_data$Year==2018,]$TotalEDAttendance_Per_1000_Patient)-3*sd(master_data[master_data$Year==2018,]$TotalEDAttendance_Per_1000_Patient)
+outlier_ed_total_2018 <- ((master_data[master_data$Year==2018,]$TotalEDAttendance_Per_1000_Patient > high_ed_total_2018) | (master_data[master_data$Year==2018,]$TotalEDAttendance_Per_1000_Patient < low_ed_total_2018))
+
+
+high_ed_total_2019 <- mean(master_data[master_data$Year==2019,]$TotalEDAttendance_Per_1000_Patient)+3*sd(master_data[master_data$Year==2019,]$TotalEDAttendance_Per_1000_Patient)
+low_ed_total_2019 <- mean(master_data[master_data$Year==2019,]$TotalEDAttendance_Per_1000_Patient)-3*sd(master_data[master_data$Year==2019,]$TotalEDAttendance_Per_1000_Patient)
+outlier_ed_total_2019 <- ((master_data[master_data$Year==2019,]$TotalEDAttendance_Per_1000_Patient > high_ed_total_2019) | (master_data[master_data$Year==2019,]$TotalEDAttendance_Per_1000_Patient < low_ed_total_2019))
+
+```
+
+List out all the outliers for year 2016-19
+```{r}
+outliers_2016 <- outlier_extended_hour_2016 | outlier_rurality_2016 | outlier_seniory_2016 | outlier_ed_total_2016
+outliers_2017 <- outlier_extended_hour_2017 | outlier_rurality_2017 | outlier_seniory_2017 | outlier_ed_total_2017
+outliers_2018 <- outlier_extended_hour_2018 | outlier_rurality_2018 | outlier_seniory_2018 | outlier_ed_total_2018
+outliers_2019 <- outlier_extended_hour_2019 | outlier_rurality_2019 | outlier_seniory_2019 | outlier_ed_total_2019
+```
+
+```{r}
+outliers_2016
+```
+
+
+
+Filter out all outliers
+```{r}
+master_data_2016_without_outliers <- master_data[master_data$Year==2016,][!outliers_2016,]
+master_data_2017_without_outliers <- master_data[master_data$Year==2017,][!outliers_2017,]
+master_data_2018_without_outliers <- master_data[master_data$Year==2018,][!outliers_2018,]
+master_data_2019_without_outliers <- master_data[master_data$Year==2019,][!outliers_2019,]
+
+model_data <- rbind(master_data_2016_without_outliers, master_data_2017_without_outliers, master_data_2018_without_outliers, master_data_2019_without_outliers)
+```
+
+
+
+Get all outliers together
+```{r}
+master_data_2016_with_outliers <- master_data[master_data$Year==2016,][outliers_2016,]
+master_data_2017_with_outliers <- master_data[master_data$Year==2017,][outliers_2017,]
+master_data_2018_with_outliers <- master_data[master_data$Year==2018,][outliers_2018,]
+master_data_2019_with_outliers <- master_data[master_data$Year==2019,][outliers_2019,]
+
+model_data_with_outliers <- rbind(master_data_2016_with_outliers, master_data_2017_with_outliers, master_data_2018_with_outliers, master_data_2019_with_outliers)
+
+model_data_with_outliers
+```
+
+
+
+Normalize the data
+
+```{r}
+normalize <- function(x) {
+return ((x - min(x)) / (max(x) - min(x)))
+}
+```
+
+```{r}
+
+model_data$Total_Extended_Hours_Per_1000_Patient_Norm <- normalize(model_data$Extended_Hour_Per_1000_Patient)
+model_data$Rurality_Percentage_Norm <- normalize(model_data$Rurality_Percentage)
+model_data$Seniority_Percentage_Norm <- normalize(model_data$Seniority_Percentage)
+model_data$TotalEDAttendance_Per_1000_Patient_Norm <- normalize(model_data$TotalEDAttendance_Per_1000_Patient)
+
+```
+
+Select relavant columns
+
+```{r}
+model_data_final <- model_data[,c("Year","Total_Extended_Hours_Per_1000_Patient_Norm", "Rurality_Percentage_Norm","Seniority_Percentage_Norm", "TotalEDAttendance_Per_1000_Patient_Norm")]
+```
+
+```{r}
+model_data_final$Year_Char <- as.character(model_data_final$Year)
+write.csv(model_data_final, 'model_data.csv')
+class(model_data_final$Year_Char)
+```
+
+
+## Make yearwise data
+```{r}
+model_data_final2016 <- filter(model_data_final, Year == 2016)
+model_data_final2017 <- filter(model_data_final, Year == 2017)
+model_data_final2018 <- filter(model_data_final, Year == 2018)
+model_data_final2019 <- filter(model_data_final, Year == 2019)
+```
+
+
+## Scatter plots
+
+```{r}
+EHS <- ggplot(data=master_data, aes(y=Total_Extended_Hours, x=Total_Patients)) + geom_point()+geom_smooth(method = "lm", se = TRUE)
+EDS <- ggplot(data=master_data, aes(y=TotalEDAttendance, x=Total_Patients)) + geom_point()+geom_smooth(method = "lm", se = TRUE)
+SS <- ggplot(data=master_data, aes(y=Total_Seniors_STP, x=Total_Patients)) + geom_point()+geom_smooth(method = "lm", se = TRUE)
+RS <- ggplot(data=master_data, aes(y=Rurality_Percentage, x=Total_Patients)) + geom_point()+geom_smooth(method = "lm", se = TRUE)
+
+ggarrange(EHS, EDS, SS, 
+          labels = c("A", "B", "C"),
+          ncol = 3, nrow = 1)
+
+ggsave("Variable_size_dependance.jpg")
+```
+
+
+
+
+
+
+```{r}
+
+ehr <- ggplot(data=model_data, aes(y=Extended_Hour_Per_1000_Patient, x=Rurality_Percentage)) + geom_point()+geom_smooth(method = "lm", se = TRUE)
+ehs <- ggplot(data=model_data, aes(y=Extended_Hour_Per_1000_Patient, x=Seniority_Percentage)) + geom_point()+geom_smooth(method = "lm", se = TRUE)
+rs <- ggplot(data=model_data, aes(y=Rurality_Percentage, x=Seniority_Percentage)) + geom_point()+geom_smooth(method = "lm", se = TRUE)
+
+ggarrange(ehr, ehs, rs, 
+          labels = c("A", "B", "C"),
+          ncol = 3, nrow = 1)
+
+ggsave("ehrs_univariate.jpg")
+```
+
+
+
+
+
+```{r}
+edr <- ggplot(data=model_data, aes(y=TotalEDAttendance_Per_1000_Patient, x=Rurality_Percentage)) + geom_point()+geom_smooth(method = "lm", se = TRUE)
+eds <- ggplot(data=model_data, aes(y=TotalEDAttendance_Per_1000_Patient, x=Seniority_Percentage)) + geom_point()+geom_smooth(method = "lm", se = TRUE)
+edeh <- ggplot(data=model_data, aes(y=TotalEDAttendance_Per_1000_Patient, x=Extended_Hour_Per_1000_Patient)) + geom_point()+geom_smooth(method = "lm", se = TRUE)
+
+ggarrange(edr, eds, edeh, 
+          labels = c("A", "B", "C"),
+          ncol = 3, nrow = 1)
+
+ggsave("edehrs_univariate.jpg")
+
+```
+
+
+## Regression
+
+### All years
+
+```{r}
+model_total <- lm(TotalEDAttendance_Per_1000_Patient_Norm ~ Total_Extended_Hours_Per_1000_Patient_Norm + Rurality_Percentage_Norm + Year, data=model_data_final)
+summary(model_total)
+```
+
+
+## With Year as Charactyer
+
+```{r}
+model_total_yearchar <- lm(TotalEDAttendance_Per_1000_Patient_Norm ~ Total_Extended_Hours_Per_1000_Patient_Norm + Rurality_Percentage_Norm +Seniority_Percentage_Norm + Year_Char +
+                             (Year_Char * Total_Extended_Hours_Per_1000_Patient_Norm) +
+                             (Year_Char * Rurality_Percentage_Norm) +
+                             (Year_Char * Seniority_Percentage_Norm)
+                             , data=model_data_final)
+  
+summary(model_total_yearchar)
+```
+
+```{r}
+model_total_yearchar <- lm(TotalEDAttendance_Per_1000_Patient_Norm ~ Total_Extended_Hours_Per_1000_Patient_Norm + Rurality_Percentage_Norm +Seniority_Percentage_Norm + Year_Char +
+                             (Year_Char : Total_Extended_Hours_Per_1000_Patient_Norm)
+                           , data=model_data_final)
+ 
+summary(model_total_yearchar)
+
+```
+
+```{r}
+model_total_yearchar <- lm(TotalEDAttendance_Per_1000_Patient_Norm ~  Rurality_Percentage_Norm +Seniority_Percentage_Norm +
+                             (Year_Char * Total_Extended_Hours_Per_1000_Patient_Norm)
+                           , data=model_data_final)
+ 
+summary(model_total_yearchar)
+
+```
+
+```{r}
+library(jtools)
+model_total_yearchar <- lm(TotalEDAttendance_Per_1000_Patient_Norm ~ Total_Extended_Hours_Per_1000_Patient_Norm + Rurality_Percentage_Norm +Seniority_Percentage_Norm + Year_Char +
+                             (Year_Char : Total_Extended_Hours_Per_1000_Patient_Norm)
+                           , data=model_data_final)
+ 
+summary(model_total_yearchar)
+
+```
+
+```{r}
+confint(model_total_yearchar)
+```
+
+
+```{r}
+library(olsrr)
+ols_plot_resid_qq(model_total_yearchar)
+```
+
+```{r}
+ols_test_normality(model_total_yearchar)
+```
+```{r}
+ols_test_correlation(model_total_yearchar)
+```
+```{r}
+ols_plot_resid_fit(model_total_yearchar)
+```
+
+```{r}
+ols_plot_resid_hist(model_total_yearchar)
+ggsave("residual.jpg")
+```
+
+
+### 2016
+
+```{r}
+model_total2016 <- lm(TotalEDAttendance_Per_1000_Patient_Norm ~ Total_Extended_Hours_Per_1000_Patient_Norm + Rurality_Percentage_Norm, data=model_data_final2016)
+summary(model_total2016)
+
+```
+
+
+### 2017
+
+```{r}
+model_total2017 <- lm(TotalEDAttendance_Per_1000_Patient_Norm ~ Total_Extended_Hours_Per_1000_Patient_Norm + Rurality_Percentage_Norm, data=model_data_final2017)
+summary(model_total2017)
+
+```
+
+### 2018
+
+```{r}
+model_total2018 <- lm(TotalEDAttendance_Per_1000_Patient_Norm ~ Total_Extended_Hours_Per_1000_Patient_Norm + Rurality_Percentage_Norm, data=model_data_final2018)
+summary(model_total2018)
+
+```
+
+
+
+## Descriptive Statistics
+
+```{r}
+library(pastecs)
+stat.desc(model_data[,c(5,11,12,13)], basic=TRUE, desc=TRUE, norm=TRUE, p=0.95)
+```
+ 
+ 
+```{r}
+head(master_data_2016_without_outliers)
+```
+ 
+```{r}
+library(pastecs)
+stat.desc(master_data_2016_without_outliers[,c(11,12,13,14)], basic=TRUE, desc=TRUE, norm=TRUE, p=0.95)
+```
+
+```{r}
+library(pastecs)
+stat.desc(master_data_2017_without_outliers[,c(11,12,13,14)], basic=TRUE, desc=TRUE, norm=TRUE, p=0.95)
+```
+
+```{r}
+library(pastecs)
+stat.desc(master_data_2018_without_outliers[,c(11,12,13,14)], basic=TRUE, desc=TRUE, norm=TRUE, p=0.95)
+```
+`
+
+```{r}
+hist(model_data$Extended_Hour_Per_1000_Patient)
+```
+ 
+
+```{r}
+hist(model_data$TotalEDAttendance_Per_1000_Patient)
+```
+```{r}
+model_data
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(data=model_data, aes(y=TotalEDAttendance_Per_1000_Patient, x=Extended_Hour_Per_1000_Patient)) + geom_point()+geom_smooth(method = "lm", se = TRUE) + facet_wrap(~factor(Year))
+#ggExtra::ggMarginal(p, type = "histogram")
+#ggsave("EH_ED2.jpg")
+
+```
+
+
+
+```{r}
+ggplot(data=model_data, aes(y=TotalEDAttendance_Per_1000_Patient, x=Extended_Hour_Per_1000_Patient)) + geom_point()+geom_smooth(method = "lm", se = TRUE)
+
+ggsave("EH_ED.jpg")
+
+```
+
+
+```{r}
+model_total_yearchar <- lm(TotalEDAttendance_Per_1000_Patient_Norm ~ Total_Extended_Hours_Per_1000_Patient_Norm + Rurality_Percentage_Norm +Seniority_Percentage_Norm + Year_Char +
+                             (Year_Char : Total_Extended_Hours_Per_1000_Patient_Norm)
+                           , data=model_data_final)
+
+```
+
+```{r}
+
+```
+
+
+```{r}
+coeff_ExtendedHour = c(-0.35, -0.075, -0.27, 0.325)
+sd = c(-0.47, -0.505, -0.45, -0.325)
+year = c("2019", "2018", "2017", "2016")
+ggplot(
+  data.frame(year = year, coeff_ExtendedHour = coeff_ExtendedHour, sd = sd), 
+  aes(x = coeff_ExtendedHour, y = year, xmin = coeff_ExtendedHour-sd, xmax = coeff_ExtendedHour+sd)
+  ) +
+  geom_point(aes(color = year),size=6, shape=21, fill="black") +
+  geom_errorbarh(aes(color = year), height=.2, size=1.5)
+ggsave("CoeffCI.jpg")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

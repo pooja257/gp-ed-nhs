@@ -1,0 +1,58 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  word_document: default
+---
+
+
+Here I read final pre-processed files from GP data and ED data.
+
+```{r}
+gp_data_16_final = read.csv('final_GP_extendedhours_2016.csv', row.names = 1)
+gp_data_17_final = read.csv('final_GP_extendedhours_2017.csv', row.names = 1)
+gp_data_18_final = read.csv('final_GP_extendedhours_2018.csv', row.names = 1)
+gp_data_19_final = read.csv('final_GP_extendedhours_2019.csv', row.names = 1)
+
+ed_data_16_final = read.csv('final_ED_Attendence_2016.csv', row.names = 1)
+ed_data_17_final = read.csv('final_ED_Attendence_2017.csv', row.names = 1)
+ed_data_18_final = read.csv('final_ED_Attendence_2018.csv', row.names = 1)
+ed_data_19_final = read.csv('final_ED_Attendence_2019.csv', row.names = 1)
+
+```
+
+```{r}
+gp_data_16_final
+```
+
+
+
+Here I will merge both ED and GP Data using STP and Year.
+```{r}
+final_16 <- merge(x=gp_data_16_final, y=ed_data_16_final, by = c("STP_code", "Year"))
+final_16$TotalAEAttendance = rowSums(final_16[7:9])
+
+final_17 <- merge(x=gp_data_17_final, y=ed_data_17_final, by = c("STP_code", "Year"))
+final_17$TotalAEAttendance = rowSums(final_17[7:9])
+
+final_18 <- merge(x=gp_data_18_final, y=ed_data_18_final, by = c("STP_code", "Year"))
+final_18$TotalAEAttendance = rowSums(final_18[7:9])
+
+final_19 <- merge(x=gp_data_19_final, y=ed_data_19_final, by = c("STP_code", "Year"))
+final_19$TotalAEAttendance = rowSums(final_19[7:9])
+```
+
+
+Save the final file as master_data
+
+```{r}
+master_data <- rbind(final_16, final_17, final_18, final_19)
+write.csv(master_data, "master_data.csv")
+```
+
+```{r}
+master_data
+```
+

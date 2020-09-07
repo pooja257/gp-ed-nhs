@@ -1,0 +1,528 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  word_document: default
+---
+
+
+```{r}
+library(dplyr)
+library(readxl)
+library(httr)
+```
+
+
+Here I will get the connection betIen Org Code of hospitals and STP code in England. 
+
+```{r}
+GET("https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/01/Acute-Trust-Attribution-File-l8sud.xls", write_disk(tf <- tempfile(fileext = ".xls")))
+link_ed_data <- read_excel(tf, sheet = "STP Mapping") 
+write.csv(link_ed_data, 'raw_Link_STP_OrgCode.csv')
+
+orgcode_stpname <- link_ed_data[1:4] %>% select(c("Org code", "STP"))
+colnames(orgcode_stpname) <- c("Org.Code", "STPName")
+
+stpname_stdcode <- link_ed_data[1:44,7:8] 
+colnames(stpname_stdcode) <- c("STPName", "STP_code")
+
+orgcode_stpcode <- merge(x=orgcode_stpname, y=stpname_stdcode, by="STPName", all.x = TRUE) %>% select(c("Org.Code","STP_code"))
+write.csv(orgcode_stpcode, 'final_Link_STP_OrgCode.csv')
+```
+
+
+Here I download December 2019 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/01/December-2019-CSV-hjd8h.csv"
+monthyear = "Dec2019"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Dec2019.csv')
+
+ed_data_dec2019_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_dec2019_withSTP, 'final_ED_Attendence_Dec2019.csv')
+
+```
+
+Here I download November 2019 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/12/November-2019-CSV-l8jf8.csv"
+monthyear = "Nov2019"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Nov2019.csv')
+ed_data_nov2019_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_nov2019_withSTP, 'final_ED_Attendence_Nov2019.csv')
+```
+
+
+Here I download October 2019 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/11/October-2019-CSV-l9sg5.csv"
+monthyear = "Oct2019"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Oct2019.csv')
+ed_data_oct2019_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_oct2019_withSTP, 'final_ED_Attendence_Oct2019.csv')
+```
+
+
+Here I download September 2019 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/11/September-2019-CSV-swha.csv"
+monthyear = "Sep2019"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Sep2019.csv')
+ed_data_sep2019_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_sep2019_withSTP, 'final_ED_Attendence_Sep2019.csv')
+```
+
+
+Here I download August 2019 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/11/August-2019-CSV-la9d8.csv"
+monthyear = "Aug2019"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Aug2019.csv')
+ed_data_aug2019_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_aug2019_withSTP, 'final_ED_Attendence_Aug2019.csv')
+```
+
+
+Here I download July 2019 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/11/July-2019-CSV-86rty.csv"
+monthyear = "Jul2019"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Jul2019.csv')
+ed_data_jul2019_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_jul2019_withSTP, 'final_ED_Attendence_Jul2019.csv')
+```
+
+
+Here I download June 2019 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/11/June-2019-CSV-l09st.csv"
+monthyear = "Jun2019"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Jun2019.csv')
+ed_data_jun2019_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_jun2019_withSTP, 'final_ED_Attendence_Jun2019.csv')
+```
+
+
+Here I download May 2019 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/11/May-2019-CSV-plmal.csv"
+monthyear = "May2019"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_May2019.csv')
+ed_data_may2019_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_may2019_withSTP, 'final_ED_Attendence_May2019.csv')
+```
+
+
+Here I download April 2019 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/11/April-2019-CSV-hs8rk.csv"
+monthyear = "Apr2019"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Apr2019.csv')
+ed_data_apr2019_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_apr2019_withSTP, 'final_ED_Attendence_Apr2019.csv')
+```
+
+
+Here I download March 2019 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/11/March-2019-CSV-plaor.csv"
+monthyear = "Mar2019"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Mar2019.csv')
+ed_data_mar2019_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_mar2019_withSTP, 'final_ED_Attendence_Mar2019.csv')
+```
+
+
+Here I download February 2019 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/06/MSitAE-FEBRUARY-2019.csv"
+monthyear = "Feb2019"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Feb2019.csv')
+ed_data_feb2019_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_feb2019_withSTP, 'final_ED_Attendence_Feb2019.csv')
+```
+
+
+Here I download January 2019 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/06/MSitAE-JANUARY-2019.csv"
+monthyear = "Jan2019"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Jan2019.csv')
+ed_data_jan2019_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_jan2019_withSTP, 'final_ED_Attendence_Jan2019.csv')
+```
+
+
+Here I download December 2018 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/06/MSitAE-DECEMBER-2018.csv"
+monthyear = "Dec2018"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Dec2018.csv')
+ed_data_dec2018_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_dec2018_withSTP, 'final_ED_Attendence_Dec2018.csv')
+```
+
+
+Here I download November 2018 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/06/MSitAE-NOVEMBER-2018.csv"
+monthyear = "Nov2018"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Nov2018.csv')
+ed_data_nov2018_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_nov2018_withSTP, 'final_ED_Attendence_Nov2018.csv')
+```
+
+
+Here I download October 2018 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/06/MSitAE-OCTOBER-2018.csv"
+monthyear = "Oct2018"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Oct2018.csv')
+ed_data_oct2018_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_oct2018_withSTP, 'final_ED_Attendence_Oct2018.csv')
+```
+
+
+Here I download Septemnber 2018 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/06/MSitAE-SEPTEMBER-2018-2.csv"
+monthyear = "Sep2018"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Sep2018.csv')
+ed_data_sep2018_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_sep2018_withSTP, 'final_ED_Attendence_Sep2018.csv')
+```
+
+
+Here I download August 2018 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/06/MSitAE-AUGUST-2018-1.csv"
+monthyear = "Aug2018"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Aug2018.csv')
+ed_data_aug2018_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_aug2018_withSTP, 'final_ED_Attendence_Aug2018.csv')
+```
+
+
+Here I download July 2018 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/06/MSitAE-JULY-2018-1.csv"
+monthyear = "Jul2018"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Jul2018.csv')
+ed_data_jul2018_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_jul2018_withSTP, 'final_ED_Attendence_Jul2018.csv')
+```
+
+
+Here I download June 2018 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/06/MSitAE-June-2018.csv"
+monthyear = "Jun2018"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Jun2018.csv')
+ed_data_jun2018_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_jun2018_withSTP, 'final_ED_Attendence_Jun2018.csv')
+```
+
+
+Here I download May 2018 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/06/MSitAE-May-2018.csv"
+monthyear = "May2018"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_May2018.csv')
+ed_data_may2018_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_may2018_withSTP, 'final_ED_Attendence_May2018.csv')
+```
+
+Here I download April 2018 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2019/06/MSitAE-April-2018.csv"
+monthyear = "Apr2018"
+
+ed_data_monthly <- read.csv(ed_url)
+write.csv(ed_data_monthly, 'raw_ED_Attendence_Apr2018.csv')
+ed_data_apr2018_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_apr2018_withSTP, 'final_ED_Attendence_Apr2018.csv')
+```
+
+Here I download January February March 2018 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2018/06/March-2018-AE-by-provider-revised-14.06.18-D44fd.xls"
+monthyear = "JanFebMar2018"
+
+GET(ed_url, write_disk(tf <- tempfile(fileext = ".xls")))
+ed_data_monthly <- read_excel(tf, sheet = "Provider Level Data",range = cell_rows(16:267))[-c(1,2),c("Code", "Type 1 Departments - Major A&E...4", "Type 2 Departments - Single Specialty...5", "Type 3 Departments - Other A&E/Minor Injury Unit...6")]
+
+colnames(ed_data_monthly) <- c("Org.Code", "Number.of.A.E.attendances.Type.1", "Number.of.A.E.attendances.Type.2", "Number.of.A.E.attendances.Other.A.E.Department")
+write.csv(ed_data_monthly, 'raw_ED_Attendence_JanFebMar2018.csv')
+
+ed_data_JanFebMar2018_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_JanFebMar2018_withSTP, 'final_ED_Attendence_JanFebMar2018.csv')
+```
+
+
+Here I download October November December 2017 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2018/06/Quarter-Three-2017-18-AE-by-provider-revised-14.06.18-D44fd.xls"
+monthyear = "OctNovDec2017"
+
+GET(ed_url, write_disk(tf <- tempfile(fileext = ".xls")))
+ed_data_monthly <- read_excel(tf, sheet = "Provider Level Data",range = cell_rows(16:267))[-c(1,2),c("Code", "Type 1 Departments - Major A&E...4", "Type 2 Departments - Single Specialty...5", "Type 3 Departments - Other A&E/Minor Injury Unit...6")]
+
+colnames(ed_data_monthly) <- c("Org.Code", "Number.of.A.E.attendances.Type.1", "Number.of.A.E.attendances.Type.2", "Number.of.A.E.attendances.Other.A.E.Department")
+write.csv(ed_data_monthly, 'raw_ED_Attendence_OctNovDec2017.csv')
+ed_data_OctNovDec2017_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_OctNovDec2017_withSTP, 'final_ED_Attendence_OctNovDec2017.csv')
+```
+
+Here I download July August September 2017 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP. 
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2018/06/Quarter-Two-2017-18-AE-by-provider-revised-14.06.18-D44fd.xls"
+monthyear = "JulAugSep2017"
+
+GET(ed_url, write_disk(tf <- tempfile(fileext = ".xls")))
+ed_data_monthly <- read_excel(tf, sheet = "Provider Level Data",range = cell_rows(16:267))[-c(1,2),c("Code", "Type 1 Departments - Major A&E...4", "Type 2 Departments - Single Specialty...5", "Type 3 Departments - Other A&E/Minor Injury Unit...6")]
+
+colnames(ed_data_monthly) <- c("Org.Code", "Number.of.A.E.attendances.Type.1", "Number.of.A.E.attendances.Type.2", "Number.of.A.E.attendances.Other.A.E.Department")
+write.csv(ed_data_monthly, 'raw_ED_Attendence_JulAugSep2017.csv')
+ed_data_JulAugSep2017_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_JulAugSep2017_withSTP, 'final_ED_Attendence_JulAugSep2017.csv')
+```
+
+
+Here I download April May June 2017 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.  
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2018/06/Quarter-One-2017-18-AE-by-provider-revised-14.06.18-D44fd.xls"
+monthyear = "AprMayJun2017"
+
+GET(ed_url, write_disk(tf <- tempfile(fileext = ".xls")))
+ed_data_monthly <- read_excel(tf, sheet = "Provider Level Data",range = cell_rows(16:267))[-c(1,2),c("Code", "Type 1 Departments - Major A&E...4", "Type 2 Departments - Single Specialty...5", "Type 3 Departments - Other A&E/Minor Injury Unit...6")]
+
+colnames(ed_data_monthly) <- c("Org.Code", "Number.of.A.E.attendances.Type.1", "Number.of.A.E.attendances.Type.2", "Number.of.A.E.attendances.Other.A.E.Department")
+write.csv(ed_data_monthly, 'raw_ED_Attendence_AprMayJun2017.csv')
+ed_data_AprMayJun2017_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_AprMayJun2017_withSTP, 'final_ED_Attendence_AprMayJun2017.csv')
+```
+
+
+Here I download January February March 2017 emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2016/06/Quarter-Four-2016-17-AE-by-provider-tnS2O.xls"
+monthyear = "JanFebMar2017"
+
+GET(ed_url, write_disk(tf <- tempfile(fileext = ".xls")))
+ed_data_monthly <- read_excel(tf, sheet = "Provider Level Data",range = cell_rows(16:267))[-c(1,2),c("Code", "Type 1 Departments - Major A&E...4", "Type 2 Departments - Single Specialty...5", "Type 3 Departments - Other A&E/Minor Injury Unit...6")]
+
+colnames(ed_data_monthly) <- c("Org.Code", "Number.of.A.E.attendances.Type.1", "Number.of.A.E.attendances.Type.2", "Number.of.A.E.attendances.Other.A.E.Department")
+write.csv(ed_data_monthly, 'raw_ED_Attendence_JanFebMar2017.csv')
+ed_data_JanFebMar2017_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_JanFebMar2017_withSTP, 'final_ED_Attendence_JanFebMar2017.csv')
+```
+
+Here I download October November December 2016  emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2016/06/Quarter-Three-2016-17-AE-by-provider-u2M8b.xls"
+monthyear = "OctNovDec2016"
+
+GET(ed_url, write_disk(tf <- tempfile(fileext = ".xls")))
+ed_data_monthly <- read_excel(tf, sheet = "A&E Data",range = cell_rows(16:267))[-c(1,2),c("Code", "Type 1 Departments - Major A&E...4", "Type 2 Departments - Single Specialty...5", "Type 3 Departments - Other A&E/Minor Injury Unit...6")]
+
+colnames(ed_data_monthly) <- c("Org.Code", "Number.of.A.E.attendances.Type.1", "Number.of.A.E.attendances.Type.2", "Number.of.A.E.attendances.Other.A.E.Department")
+write.csv(ed_data_monthly, 'raw_ED_Attendence_OctNovDec2016.csv')
+ed_data_OctNovDec2016_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_OctNovDec2016_withSTP, 'final_ED_Attendence_OctNovDec2016.csv')
+```
+
+
+Here I download July August September 2016  emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2016/06/Quarter-Two-2016-17-AE-by-provider-tyaBT.xls"
+monthyear = "JulAugSep2016"
+
+GET(ed_url, write_disk(tf <- tempfile(fileext = ".xls")))
+ed_data_monthly <- read_excel(tf, sheet = "A&E Data",range = cell_rows(16:267))[-c(1,2),c("Code", "Type 1 Departments - Major A&E...4", "Type 2 Departments - Single Specialty...5", "Type 3 Departments - Other A&E/Minor Injury Unit...6")]
+
+colnames(ed_data_monthly) <- c("Org.Code", "Number.of.A.E.attendances.Type.1", "Number.of.A.E.attendances.Type.2", "Number.of.A.E.attendances.Other.A.E.Department")
+write.csv(ed_data_monthly, 'raw_ED_Attendence_JulAugSep2016.csv')
+ed_data_JulAugSep2016_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_JulAugSep2016_withSTP, 'final_ED_Attendence_JulAugSep2016.csv')
+```
+
+Here I download April May June 2016  emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2016/06/Quarter-One-2016-17-AE-by-provider-TAmhY.xls"
+monthyear = "AprMayJun2016"
+
+GET(ed_url, write_disk(tf <- tempfile(fileext = ".xls")))
+ed_data_monthly <- read_excel(tf, sheet = "A&E Data",range = cell_rows(16:267))[-c(1,2),c("Code", "Type 1 Departments - Major A&E...4", "Type 2 Departments - Single Specialty...5", "Type 3 Departments - Other A&E/Minor Injury Unit...6")]
+
+colnames(ed_data_monthly) <- c("Org.Code", "Number.of.A.E.attendances.Type.1", "Number.of.A.E.attendances.Type.2", "Number.of.A.E.attendances.Other.A.E.Department")
+write.csv(ed_data_monthly, 'raw_ED_Attendence_AprMayJun2016.csv')
+ed_data_AprMayJun2016_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_AprMayJun2016_withSTP, 'final_ED_Attendence_AprMayJun2016.csv')
+```
+
+Here I download January February March 2016  emergency attendence data and merge it with previous orgcode_stpdcode data to have STPcode and then groupby with STPcode to summarize it with total emergency attendences per STP.
+
+```{r}
+ed_url = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2015/08/Q4-2015-16-AE-by-provider-N784o-Revised-11082016.xls"
+monthyear = "JanFebMar2016"
+
+GET(ed_url, write_disk(tf <- tempfile(fileext = ".xls")))
+ed_data_monthly <- read_excel(tf, sheet = "A&E Data",range = cell_rows(16:267))[-c(1,2),c("Code", "Type 1 Departments - Major A&E...4", "Type 2 Departments - Single Specialty...5", "Type 3 Departments - Other A&E/Minor Injury Unit...6")]
+
+colnames(ed_data_monthly) <- c("Org.Code", "Number.of.A.E.attendances.Type.1", "Number.of.A.E.attendances.Type.2", "Number.of.A.E.attendances.Other.A.E.Department")
+write.csv(ed_data_monthly, 'raw_ED_Attendence_JanFebMar2016.csv')
+ed_data_JanFebMar2016_withSTP <- merge(x=ed_data_monthly, y=orgcode_stpcode, by="Org.Code") %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances" = sum(Number.of.A.E.attendances.Type.1), "Type2AEAttendances" = sum(Number.of.A.E.attendances.Type.2),"OtherAEAttendances" = sum(Number.of.A.E.attendances.Other.A.E.Department))
+write.csv(ed_data_JanFebMar2016_withSTP, 'final_ED_Attendence_JanFebMar2016.csv')
+```
+
+
+## Yearwise ED data
+
+```{r}
+ed_data_16_final <- rbind(ed_data_JanFebMar2016_withSTP, ed_data_AprMayJun2016_withSTP, ed_data_JulAugSep2016_withSTP, ed_data_OctNovDec2016_withSTP) %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances"=sum(Type1AEAttendances),"Type2AEAttendances"=sum(Type2AEAttendances),"OtherAEAttendances"=sum(Type1AEAttendances)) %>%
+  mutate("Year"=2016)
+write.csv(ed_data_16_final, 'final_ED_Attendence_2016.csv')
+ed_data_17_final <- rbind(ed_data_JanFebMar2017_withSTP, ed_data_AprMayJun2017_withSTP, ed_data_JulAugSep2017_withSTP, ed_data_OctNovDec2017_withSTP) %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances"=sum(Type1AEAttendances),"Type2AEAttendances"=sum(Type2AEAttendances),"OtherAEAttendances"=sum(Type1AEAttendances)) %>% mutate("Year"=2017)
+write.csv(ed_data_17_final, 'final_ED_Attendence_2017.csv')
+ed_data_18_final <- rbind(ed_data_JanFebMar2018_withSTP, ed_data_apr2018_withSTP, ed_data_may2018_withSTP, ed_data_jun2018_withSTP, ed_data_jul2018_withSTP, ed_data_aug2018_withSTP, ed_data_sep2018_withSTP, ed_data_oct2018_withSTP, ed_data_nov2018_withSTP, ed_data_dec2018_withSTP) %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances"=sum(Type1AEAttendances),"Type2AEAttendances"=sum(Type2AEAttendances),"OtherAEAttendances"=sum(Type1AEAttendances)) %>% mutate("Year"=2018)
+write.csv(ed_data_18_final, 'final_ED_Attendence_2018.csv')
+ed_data_19_final <- rbind(ed_data_jan2019_withSTP, ed_data_feb2019_withSTP, ed_data_mar2019_withSTP, ed_data_apr2019_withSTP, ed_data_may2019_withSTP, ed_data_jun2019_withSTP, ed_data_jul2019_withSTP, ed_data_aug2019_withSTP, ed_data_sep2019_withSTP, ed_data_oct2019_withSTP, ed_data_nov2019_withSTP, ed_data_dec2019_withSTP) %>%
+  group_by(STP_code) %>%
+  summarise("Type1AEAttendances"=sum(Type1AEAttendances),"Type2AEAttendances"=sum(Type2AEAttendances),"OtherAEAttendances"=sum(Type1AEAttendances)) %>% mutate("Year"=2019)
+write.csv(ed_data_19_final, 'final_ED_Attendence_2019.csv')
+
+```

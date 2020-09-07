@@ -1,0 +1,195 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+This file reads the GP extended hours data and preprocess it for each year from 2016-2019.
+
+```{r}
+library(dplyr)
+```
+
+ 
+Here I will get the connection betIen CCG Code and STP code in England. 
+```{r}
+ccg_stp_url = "https://opendata.arcgis.com/datasets/7e72ce9cd4204d588c6f8dd1cac77e98_0.csv"
+link_gp_data <- read.csv(ccg_stp_url) %>% select("STP18CD","CCG18CDH")
+colnames(link_gp_data) <- c("STP_code","CCG.Code")
+write.csv(read.csv(ccg_stp_url), 'raw_Link_STP_CCG.csv')
+write.csv(link_gp_data, 'final_Link_STP_CCG.csv')
+```
+
+
+
+Here I will download year 2015-2016 NHS payment data to get claimed Extended Hours per GP.I Will then merge STP code in this data using above link_gp_data. I will select only STPCode, Number of Registered Patients and Extended opening hours and then group by with STP code and then summarize the data for each STP with total patients registerdd and total extended hour claimed.I will then download the data for number of seniors registered in 2016 and then merge with link_gp_data to add STPCode. I will then groupby and summarize for each STP, how many seniors are registered. Finally I will merge both datasets with STPCode. SInce rurality data of GPs is not available for year 2016, I will for now impute it with 0.5.
+```{r}
+
+gp_url <- "https://files.digital.nhs.uk/publicationimport/pub21xxx/pub21318/nhspaymentsgp-15-16-csv.csv"
+
+colnames(link_gp_data) <- c("STP_code","CCGCode")
+
+new_columnnames <- c("STP_code","NumberOfRegisteredPatientsLastKnownFigure","ExtendedHoursAccess_.")
+
+
+gp_data_15_16 <- merge(x = read.csv(gp_url), y = link_gp_data, by = "CCGCode") %>% select(all_of(new_columnnames)) %>%
+  group_by(STP_code) %>%
+  summarise("Total_Patients"=sum(NumberOfRegisteredPatientsLastKnownFigure), "Total_Extended_Hours" = sum(ExtendedHoursAccess_.), "Rurality_Fraction" = 0.5)
+
+
+all_columns <- c("CCG_CODE","MALE_95.","FEMALE_95.","Male_85.89", "MALE_90.94","FEMALE_85.89", "FEMALE_90.94")
+for (i in seq(65, 80, by=5)){
+  new_male <- paste("MALE_",i,".", i+4,sep = "")
+  new_female <- paste("FEMALE_",i,".", i+4,sep = "")
+  all_columns <- c(all_columns,new_male,new_female)
+}
+
+df_age <- read.csv("https://files.digital.nhs.uk/publicationimport/pub19xxx/pub19775/ccg-reg-patients.csv") %>% select(all_columns)
+write.csv(df_age, 'raw_GP_seniority_age_2016.csv')
+
+df_age["Total_Seniors_CCG"] <- rowSums(df_age[2:15])
+
+df_age["Year"] = 2016
+
+df_final_2016 <- df_age %>% select(c("CCG_CODE", "Total_Seniors_CCG", "Year"))
+
+colnames(df_final_2016) <- c("CCGCode", "Total_Seniors_CCG", "Year")
+
+df_final_2016_STP <- merge(x = df_final_2016, y = link_gp_data, by = "CCGCode") %>% 
+  group_by(STP_code) %>%
+  summarise("Total_Seniors_STP"=sum(Total_Seniors_CCG), "Year"=2016)
+
+gp_data_16_final <-  merge(x=gp_data_15_16, y=df_final_2016_STP, by="STP_code")
+write.csv(read.csv(gp_url), 'raw_GP_extendedhours_2016.csv')
+
+write.csv(gp_data_16_final, 'final_GP_extendedhours_2016.csv')
+
+rm(df_age, df_final_2016, gp_data_15_16, df_final_2016_STP)
+```
+
+
+
+Here I will download year 2016-2017 NHS payment data to get claimed Extended Hours per GP.I Will then merge STP code in this data using above link_gp_data. I will select only STPCode, Number of Registered Patients, Practice Rurality and Extended opening hours and then group by with STP code and then summarize the data for each STP with total patients registerdd and total extended hour claimed.I will then download the data for number of seniors registered in 2017 and then merge with link_gp_data to add STPCode. I will then groupby and summarize for each STP, how many seniors are registered. Finally I will merge both datasets with STPCode. 
+```{r}
+gp_url <- "https://files.digital.nhs.uk/publication/4/3/nhspaymentsgp-16-17-csv.csv"
+
+colnames(link_gp_data) <- c("STP_code","CCGCode")
+
+new_columnnames <- c("STP_code","NumberofRegisteredPatientsLastKnownFigure","ExtendedHoursAccess_.","PracticeRurality")
+
+gp_data_16_17 <- merge(x = read.csv(gp_url), y = link_gp_data, by = "CCGCode") %>% select(all_of(new_columnnames)) %>%
+  group_by(STP_code) %>%
+  summarise("Total_Patients"=sum(NumberofRegisteredPatientsLastKnownFigure), "Total_Extended_Hours" = sum(ExtendedHoursAccess_.), "Rurality_Fraction" = length(PracticeRurality[PracticeRurality=="Rural"]) / length(PracticeRurality))
+
+
+all_columns <- c("NHSE_CCG_CODE","MALE_95.","FEMALE_95.","MALE_85.89", "MALE_90.94","FEMALE_85.89", "FEMALE_90.94")
+for (i in seq(65, 80, by=5)){
+  new_male <- paste("MALE_",i,".", i+4,sep = "")
+  new_female <- paste("FEMALE_",i,".", i+4,sep = "")
+  all_columns <- c(all_columns,new_male,new_female)
+}
+
+df_age <- read.csv("https://files.digital.nhs.uk/publicationimport/pub23xxx/pub23139/ccg-reg-patients.csv") %>% select(all_columns)
+write.csv(df_age, 'raw_GP_seniority_age_2017.csv')
+
+df_age["Total_Seniors_CCG"] <- rowSums(df_age[2:15])
+
+df_age["Year"] <- 2017
+
+df_final_2017 <- df_age %>% select(c("NHSE_CCG_CODE", "Total_Seniors_CCG", "Year"))
+
+colnames(df_final_2017) <- c("CCGCode", "Total_Seniors_CCG", "Year")
+
+df_final_2017_STP <- merge(x = df_final_2017, y = link_gp_data, by = "CCGCode") %>% 
+  group_by(STP_code) %>%
+  summarise("Total_Seniors_STP"=sum(Total_Seniors_CCG), "Year"=2017)
+
+gp_data_17_final <-  merge(x=gp_data_16_17, y=df_final_2017_STP, by="STP_code")
+write.csv(read.csv(gp_url), 'raw_GP_extendedhours_2017.csv')
+write.csv(gp_data_17_final, 'final_GP_extendedhours_2017.csv')
+
+rm(df_age, df_final_2017, gp_data_16_17, df_final_2017_STP)
+
+
+```
+
+
+
+Here I will download year 2017-2018 NHS payment data to get claimed Extended Hours per GP.I Will then merge STP code in this data using above link_gp_data. I will select only STPCode, Number of Registered Patients, Practice Rurality and Extended opening hours and then group by with STP code and then summarize the data for each STP with total patients registerdd and total extended hour claimed.I will then download the data for number of seniors registered in 2018 and then merge with link_gp_data to add STPCode. I will then groupby and summarize for each STP, how many seniors are registered. Finally I will merge both datasets with STPCode. 
+```{r}
+gp_url <- "https://files.digital.nhs.uk/11/082639/nhspaymentsgp-17-18-csv.csv"
+
+colnames(link_gp_data) <- c("STP_code","CCG.Code")
+
+new_columnnames <- c("STP_code","Practice.Rurality","Number.of.Registered.Patients..Last.Known.Figure.","Extended.Hours.Access")
+
+gp_data_17_18 <- merge(x = read.csv(gp_url), y = link_gp_data, by = "CCG.Code") %>% select(all_of(new_columnnames)) %>%
+  group_by(STP_code) %>%
+  summarise("Total_Patients"=sum(Number.of.Registered.Patients..Last.Known.Figure.), "Total_Extended_Hours" = sum(Extended.Hours.Access), "Rurality_Fraction" = length(Practice.Rurality[Practice.Rurality=="Rural"]) / length(Practice.Rurality))
+
+
+age_female_data <- read.csv("https://files.digital.nhs.uk/excel/c/m/gp-reg-pat-prac-sing-age-female-jan-18.csv")
+
+age_male_data <- read.csv("https://files.digital.nhs.uk/excel/d/l/gp-reg-pat-prac-sing-age-male-jan-18.csv")
+write.csv(rbind(age_female_data,age_male_data), 'raw_GP_seniority_age_2018.csv')
+
+df_final_2018 <- rbind(age_female_data,age_male_data)  %>% filter(AGE != "ALL") %>% transform(AGE = as.numeric(AGE))%>% filter(AGE >= 65) %>% group_by(CCG_CODE) %>% summarise("Total_Seniors_CCG" = sum(NUMBER_OF_PATIENTS), Year=2018)
+
+colnames(df_final_2018) <- c("CCG.Code", "Total_Seniors_CCG", "Year")
+
+df_final_2018_STP <- merge(x = df_final_2018, y = link_gp_data, by = "CCG.Code") %>% 
+  group_by(STP_code) %>%
+  summarise("Total_Seniors_STP"=sum(Total_Seniors_CCG), "Year"=2018)
+
+gp_data_18_final <-  merge(x=gp_data_17_18, y=df_final_2018_STP, by="STP_code")
+write.csv(read.csv(gp_url), 'raw_GP_extendedhours_2018.csv')
+write.csv(gp_data_18_final, 'final_GP_extendedhours_2018.csv')
+rm(gp_data_17_18,df_final_2018_STP,age_female_data,age_male_data,df_final_2018)
+```
+
+
+Here I will download year 2018-2019 NHS payment data to get claimed Extended Hours per GP.I Will then merge STP code in this data using above link_gp_data. I will select only STPCode, Number of Registered Patients, Practice Rurality and Extended opening hours and then group by with STP code and then summarize the data for each STP with total patients registerdd and total extended hour claimed.I will then download the data for number of seniors registered in 2019 and then merge with link_gp_data to add STPCode. I will then groupby and summarize for each STP, how many seniors are registered. Finally I will merge both datasets with STPCode. 
+```{r}
+gp_url <- "https://files.digital.nhs.uk/D8/A76FA9/nhspaymentsgp-18-19-csv.csv"
+
+colnames(link_gp_data) <- c("STP_code","CCG.Code")
+
+new_columnnames <- c("STP_code","Practice.Rurality","Average.Number.of.Registered.Patients","Extended.Hours.Access")
+
+gp_data_18_19 <- merge(x = read.csv(gp_url), y = link_gp_data, by = "CCG.Code") %>% select(all_of(new_columnnames)) %>%
+  group_by(STP_code) %>%
+  summarise("Total_Patients"=sum(Average.Number.of.Registered.Patients), "Total_Extended_Hours" = sum(Extended.Hours.Access), "Rurality_Fraction" = length(Practice.Rurality[Practice.Rurality=="Rural"]) / length(Practice.Rurality))
+
+
+age_female_data <- read.csv("https://files.digital.nhs.uk/83/EBDC33/gp-reg-pat-prac-sing-age-female.csv")
+
+age_male_data <- read.csv("https://files.digital.nhs.uk/E5/E97ADD/gp-reg-pat-prac-sing-age-male.csv")
+write.csv(rbind(age_female_data,age_male_data), 'raw_GP_seniority_age_2019.csv')
+
+df_final_2019 <- rbind(age_female_data,age_male_data) %>% filter(AGE != "ALL") %>% transform(AGE = as.numeric(AGE))%>% filter(AGE >= 65) %>% group_by(CCG_CODE) %>% summarise("Total_Seniors_CCG" = sum(NUMBER_OF_PATIENTS), "Year"=2019, "AvgAgeCCG" = mean(AGE))
+
+#rm(age_female_data,age_male_data)
+colnames(df_final_2019) <- c("CCG.Code", "Total_Seniors_CCG", "Year", "AvgAgeCCG")
+
+df_final_2019_STP <- merge(x = df_final_2019, y = link_gp_data, by = "CCG.Code") %>% 
+  group_by(STP_code) %>%
+  summarise("Total_Seniors_STP"=sum(Total_Seniors_CCG), "Year"=2019)
+
+gp_data_19_final <-  merge(x=gp_data_18_19, y=df_final_2019_STP, by="STP_code")
+write.csv(read.csv(gp_url), 'raw_GP_extendedhours_2019.csv')
+write.csv(gp_data_18_final, 'final_GP_extendedhours_2019.csv')
+rm(gp_data_18_19,df_final_2019_STP,age_female_data,age_male_data,df_final_2019)
+```
+
+
+
+
+
+
+
+
+
+
+
